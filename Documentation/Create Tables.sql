@@ -4,16 +4,11 @@ CREATE TABLE departments (
     department NVARCHAR(100) NOT NULL
 );
 
-SELECT *FROM departments;
-
 -- Tabla de trabajos
 CREATE TABLE jobs (
     id INT PRIMARY KEY,
     job NVARCHAR(100) NOT NULL
 );
-
-SELECT * FROM jobs;
-
 
 -- Tabla de empleados contratados
 CREATE TABLE hired_employees (
@@ -26,9 +21,12 @@ CREATE TABLE hired_employees (
     FOREIGN KEY (job_id) REFERENCES jobs(id)
 );
 
+-----------------------------
+SELECT *FROM departments;
+SELECT * FROM jobs;
 SELECT *FROM hired_employees;
 
-----------------------------------
+------------------------------
 DELETE FROM hired_employees;
 DELETE FROM jobs;
 DELETE FROM departments;

@@ -1,5 +1,6 @@
 from core.services import DataIngestionService
 from flask import Blueprint, jsonify, request
+from sqlalchemy import text
 
 router = Blueprint("routes", __name__)
 service = DataIngestionService()
@@ -136,6 +137,77 @@ def insert_jobs():
         return jsonify({"inserted": inserted}), 200
     except Exception as e:
         session.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
+
+# END POINT METRICS
+
+@router.route("/report/hired-by-quarter", methods=["GET"])
+def hired_by_quarter():
+    from infra.db.connection import SessionLocal
+    session = SessionLocal()
+
+    try:
+        result = session.execute(text("""
+            SELECT 
+                d.department,
+                j.job,
+                SUM(CASE WHEN MONTH(h.datetime) BETWEEN 1 AND 3 THEN 1 ELSE 0 END) AS Q1,
+                SUM(CASE WHEN MONTH(h.datetime) BETWEEN 4 AND 6 THEN 1 ELSE 0 END) AS Q2,
+                SUM(CASE WHEN MONTH(h.datetime) BETWEEN 7 AND 9 THEN 1 ELSE 0 END) AS Q3,
+                SUM(CASE WHEN MONTH(h.datetime) BETWEEN 10 AND 12 THEN 1 ELSE 0 END) AS Q4
+            FROM hired_employees h
+            JOIN departments d ON h.department_id = d.id
+            JOIN jobs j ON h.job_id = j.id
+            WHERE YEAR(h.datetime) = 2021
+            GROUP BY d.department, j.job
+            ORDER BY d.department ASC, j.job ASC;
+        """))
+
+        data = [dict(row._mapping) for row in result]
+        return jsonify(data)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
+
+@router.route("/report/hiring-above-average", methods=["GET"])
+def hiring_above_average():
+    from infra.db.connection import SessionLocal
+    session = SessionLocal()
+
+    try:
+        result = session.execute(text("""
+            SELECT 
+                d.id,
+                d.department,
+                COUNT(h.id) AS hired
+            FROM 
+                hired_employees h
+            JOIN 
+                departments d ON h.department_id = d.id
+            WHERE 
+                YEAR(h.datetime) = 2021
+            GROUP BY 
+                d.id, d.department
+            HAVING 
+                COUNT(h.id) > (
+                    SELECT AVG(hired_count)
+                    FROM (
+                        SELECT COUNT(h.id) AS hired_count
+                        FROM hired_employees h
+                        WHERE YEAR(h.datetime) = 2021
+                        GROUP BY h.department_id
+                    ) AS dept_avg
+                )
+            ORDER BY hired DESC;
+        """))
+        data = [dict(row._mapping) for row in result]
+        return jsonify(data)
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         session.close()

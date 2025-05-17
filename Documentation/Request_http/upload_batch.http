@@ -1,0 +1,19 @@
+### Insertar empleados en lote
+POST http://localhost:5001/upload-batch
+Content-Type: application/json
+[
+  {
+    "id": 9999001,
+    "name": "Sofía Pérez",
+    "datetime": "2021-01-15T09:00:00Z",
+    "department_id": 1,
+    "job_id": 2
+  },
+  {
+    "id": 9999002,
+    "name": "Luis Gómez",
+    "datetime": "2021-02-20T14:00:00Z",
+    "department_id": 2,
+    "job_id": 1
+  }
+]

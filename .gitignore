@@ -27,6 +27,9 @@
 ### dotenv template
 .env
 
+#Sonar generated dir
+/.sonar/
+
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries

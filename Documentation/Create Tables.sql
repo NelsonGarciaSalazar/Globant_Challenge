@@ -22,9 +22,14 @@ CREATE TABLE hired_employees (
 );
 
 -----------------------------
-SELECT *FROM departments;
+SELECT COUNT(1) FROM departments;
+SELECT COUNT(1) FROM jobs;
+SELECT COUNT(1) FROM hired_employees;
+
+------------------------------------
+SELECT * FROM departments;
 SELECT * FROM jobs;
-SELECT *FROM hired_employees;
+SELECT * FROM hired_employees;
 
 ------------------------------
 DELETE FROM hired_employees;

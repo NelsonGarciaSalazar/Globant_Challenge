@@ -1,5 +1,5 @@
 ### Insertar empleados en lote
-POST http://localhost:5001/upload-batch
+POST http://localhost:5001/upload-hired-employees
 Content-Type: application/json
 [
   {

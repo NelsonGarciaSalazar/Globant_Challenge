@@ -40,7 +40,7 @@ ENV FLASK_APP=main.py \
     FLASK_ENV=production
 
 # 6. Exponer el puerto
-EXPOSE 5001
+EXPOSE 80
 
 # 7. Ejecutar la aplicación Flask con Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "main:app"]

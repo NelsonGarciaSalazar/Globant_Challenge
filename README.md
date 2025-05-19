@@ -133,7 +133,7 @@ AZURE_BLOB_CONTAINER=your-container-name
 python main.py
 ```
 
-API available at: `http://localhost:5001`
+API available at: `http://localhost:80`
 
 ---
 
@@ -180,7 +180,7 @@ To build and run the container:
 
 ```bash
 docker buildx build --platform linux/amd64 -t nelsongarciasalazar/globant_challenge:latest --load .
-docker run --env-file .env -p 5001:5001 nelsongarciasalazar/globant_challenge:latest
+docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
 ```
 
 ---

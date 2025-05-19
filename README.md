@@ -1,43 +1,60 @@
 # Globant Data Engineering Challenge
 
-This project implements a robust data ingestion and reporting API using **Flask**, **Azure SQL**, and **Azure Blob Storage**, following clean architecture principles.
+This project implements a robust data ingestion and reporting API using **Flask**, **Azure SQL**, and **Azure Blob Storage**, following **Hexagonal Architecture (Ports & Adapters)**. The architecture ensures a clear separation of concerns between core business logic, infrastructure, and delivery mechanisms, allowing high testability and scalability.
+
+## 🧱 Hexagonal Architecture Overview
+
+The application is structured around three main layers:
+
+- **Domain Layer**: Contains core entities (`Department`, `Job`, `Employee`) with no external dependencies.
+- **Application/Core Layer**: Implements use cases or services (`DataIngestionService`) operating over domain models.
+- **Infrastructure Layer**: Provides the actual implementations of ports—such as SQL databases and Azure Blob access.
+- **API Layer**: Exposes endpoints via Flask and delegates to core services.
+
+This decoupling allows you to easily mock components (e.g., Blob storage, DB) for testing or replace adapters (e.g., migrate from Azure SQL to PostgreSQL).
+
+![img_1.png](img_1.png)
+
+---
 
 ## 📁 Project Structure
 
-```
+```bash
 .
-├── Dockerfile
-├── Documentation
-│ ├── Create Tables.sql
-│ ├── Globant’s Data Engineering Coding Challenge.pdf
-│ ├── Globant Challenge.postman_collection.json
-│ └── data_challenge_files
-├── README.md
-├── __pycache__
-├── api
-│ └── routes.py
-├── config.py
-├── core
-│ └── services.py
-├── domain
-│ ├── department.py
-│ ├── employee.py
-│ └── job.py
-├── infra
-│ ├── db
-│ │ ├── connection.py
-│ │ └── models.py
-│ └── storage
-│     └── azure_blob.py
-├── main.py
-├── requirements.txt
-├── tests
-│ ├── conftest.py
-│ ├── mocks
-│ ├── test_hired_by_quarter.py
-│ ├── test_hiring_above_average.py
-│ ├── test_routes.py
-│ └── test_services_success.py
+├── Dockerfile                           # Docker container setup
+├── Documentation                        # Requirements, sample requests, and raw data
+│├── Create Tables.sql                # SQL script to create DB schema
+│├── Globant’s Data Engineering Coding Challenge.pdf  # Original challenge
+│├── Globant Challenge.postman_collection.json # HTTP request samples
+│└── data_challenge_files             # Raw CSV data files
+├── README.md                            # Project documentation
+├── __pycache__/                         # Python bytecode cache (ignored)
+├── api/
+│└── routes.py                        # Flask endpoints (entry points of the app)
+├── config.py                            # Environment variable configuration
+├── core/
+│└── services.py                      # Business logic layer (use cases)
+├── domain/
+│├── department.py                    # Domain model: Department
+│├── employee.py                      # Domain model: Employee
+│└── job.py                           # Domain model: Job
+├── infra/                               # Adapters for external dependencies
+│├── db/
+││├── connection.py                # SQLAlchemy connection manager
+││└── models.py                    # ORM models mapped to DB tables
+│└── storage/
+│    └── azure_blob.py                # Adapter for Azure Blob Storage
+├── main.py                              # App entrypoint
+├── requirements.txt                     # Python dependencies
+├── tests/
+│├── conftest.py                      # Pytest fixtures and DB/Blob mocks
+│├── mocks/                           # Mocked adapters (BlobClient, etc.)
+│├── test_hired_by_quarter.py        # Report test 1
+│├── test_hiring_above_average.py    # Report test 2
+│├── test_routes.py                  # Tests for Flask routes
+│└── test_services_success.py        # Tests for services with valid data
+| .coverange                         # Tools to validate coverage test
+| .env                               # Credentials to connect Azure Blob Storage Container and SQL Server 
 ```
 
 ---
@@ -162,8 +179,8 @@ tests/test_services_success.py ...
 To build and run the container:
 
 ```bash
-docker build -t globant-challenge .
-docker run -p 5001:5001 --env-file .env globant-challenge
+docker buildx build --platform linux/amd64 -t nelsongarciasalazar/globant_challenge:latest --load .
+docker run --env-file .env -p 5001:5001 nelsongarciasalazar/globant_challenge:latest
 ```
 
 ---
@@ -175,4 +192,4 @@ A Postman collection is available in the `Documentation` folder: `Globant Challe
 ---
 
 ## 📬 Contact
-For any questions or feedback, please contact the repository author.
+For any questions or feedback, please contact the repository author. nelsong.salazar@gmail.com

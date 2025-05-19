@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "27b0d3df-6a99-43a2-a3cd-e45252348ba7",
+		"name": "Globant Challenge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14942290",
+		"_collection_link": "https://restless-capsule-677961.postman.co/workspace/Globant-Challenge~a5f8bffc-d152-4968-a509-bddd26900ffc/collection/14942290-27b0d3df-6a99-43a2-a3cd-e45252348ba7?action=share&source=collection_link&creator=14942290"
+	},
+	"item": [
+		{
+			"name": "Upload All files from Blob to Azure SQL Server",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/upload-files",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"upload-files"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload jobs.csv to Azure SQL Server",
+			"protocolProfileBehavior": {
+				"protocolVersion": "http1"
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/jobs",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"jobs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload departments.csv to Azure Sql Server",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/departments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"departments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload hired_employyes.csv to Azure SQL Server",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/upload-hired-employees",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"upload-hired-employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Hire Employee in 2021",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/report/hired-by-quarter",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"report",
+						"hired-by-quarter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Departments that hired the most in 2021",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/report/hiring-above-average",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"report",
+						"hiring-above-average"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

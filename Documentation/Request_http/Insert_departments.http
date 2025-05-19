@@ -1,7 +1,0 @@
-POST http://localhost:5001/departments
-Content-Type: application/json
-[
-  { "id": 1, "department": "Supply Chain" },
-  { "id": 2, "department": "Maintenance" },
-  { "id": 3, "department": "Staff" }
-]

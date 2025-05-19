@@ -1,2 +1,0 @@
-### Upload all tables
-POST http://localhost:5001/upload-files

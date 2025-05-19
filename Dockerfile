@@ -36,7 +36,6 @@ COPY . .
 # 5. Variables de entorno (puedes sobreescribir con `docker run -e`)
 ENV FLASK_APP=main.py \
     FLASK_RUN_HOST=0.0.0.0 \
-    FLASK_PORT=5001 \
     FLASK_ENV=production
 
 # 6. Exponer el puerto

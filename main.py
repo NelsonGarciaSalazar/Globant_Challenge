@@ -6,6 +6,12 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     app.register_blueprint(router)
+
+    # Ruta raíz para validar despliegue
+    @app.route("/")
+    def root():
+        return "¡Hi from Azure Web App with Docker and Flask!"
+
     return app
 
 app = create_app()

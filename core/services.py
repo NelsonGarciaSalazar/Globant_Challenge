@@ -118,12 +118,13 @@ class DataIngestionService:
                         job_id=int(row["job_id"])
                     )
                     session.add(emp)
+                    session.commit()
                     inserted += 1
                 except Exception:
+                    session.rollback()
                     errors += 1
                     error_ids.append(int(row["id"]))
 
-            session.commit()
             print(f"Employees: inserted={inserted}, existing={existing}, errors={errors}")
             return {
                 "processed": total,

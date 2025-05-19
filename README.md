@@ -26,6 +26,7 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 │├── Create Tables.sql                # SQL script to create DB schema
 │├── Globant’s Data Engineering Coding Challenge.pdf  # Original challenge
 │├── Globant Challenge.postman_collection.json # HTTP request samples
+||-- Globant Challenge Azure.postman_collection.json # HTTP request samples
 │└── data_challenge_files             # Raw CSV data files
 ├── README.md                            # Project documentation
 ├── __pycache__/                         # Python bytecode cache (ignored)
@@ -54,7 +55,8 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 │├── test_routes.py                  # Tests for Flask routes
 │└── test_services_success.py        # Tests for services with valid data
 | .coverange                         # Tools to validate coverage test
-| .env                               # Credentials to connect Azure Blob Storage Container and SQL Server 
+| .env                               # Credentials to connect Azure Blob Storage Container and SQL Server
+|  .gitignore                        # Ignore files to git repository 
 ```
 
 ---
@@ -176,10 +178,25 @@ tests/test_services_success.py ...
 
 ## 🐳 Docker Support
 
-To build and run the container:
+You can either build the image locally for development, or pull the latest pre-built image from Docker Hub.
+
+---
+
+### 🔨 Option 1: Build the Docker image locally (recommended for development)
 
 ```bash
+# Build the image targeting linux/amd64 (required for Azure compatibility)
 docker buildx build --platform linux/amd64 -t nelsongarciasalazar/globant_challenge:latest --load .
+
+# Run the container locally with environment variables from .env file
+docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
+
+### OPTION 2
+
+# Pull the latest image from Docker Hub
+docker pull nelsongarciasalazar/globant_challenge:latest
+
+# Run the container using environment variables from your .env file
 docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
 ```
 

@@ -92,21 +92,22 @@ def test_upload_files_endpoint(client, monkeypatch):
     assert data["hired_employees"][0]["inserted"] == 2
 
 def test_upload_hired_employees_endpoint(client, monkeypatch):
-    # Simulate 2 paged batches (first full, second short)
-    calls = iter([
-        {"processed": 1000, "inserted": 1000, "already_exists": 0, "errors": 0, "error_ids": []},
-        {"processed": 100, "inserted": 100, "already_exists": 0, "errors": 0, "error_ids": []}
-    ])
+    from uuid import uuid4
+    fake_task_id = str(uuid4())
 
-    monkeypatch.setattr("api.routes.service.load_employees", lambda start=0, limit=1000, skip_existing=True: next(calls))
+    class FakeAsyncResult:
+        id = fake_task_id
 
-    response = client.post("/upload-hired-employees")
-    assert response.status_code == 200
+        def __init__(self, *args, **kwargs):
+            self.status = "accepted"
+
+    monkeypatch.setattr("core.tasks.load_employees_task.delay", lambda **kwargs: FakeAsyncResult())
+
+    response = client.post("/upload-hired-employees?start=0&limit=1000")
+    assert response.status_code == 202
     data = response.get_json()
-
-    assert isinstance(data, list)
-    assert data[0]["inserted"] == 1000
-    assert data[1]["inserted"] == 100
+    assert "task_id" in data
+    assert data["status"] == "accepted"
 
 def test_upload_files_with_error(client, monkeypatch):
     monkeypatch.setattr("api.routes.service.load_departments", lambda: (_ for _ in ()).throw(Exception("departments error")))

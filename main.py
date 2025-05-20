@@ -7,13 +7,7 @@ def create_app():
     CORS(app)
     app.register_blueprint(router)
 
-    # Ruta raíz para validar despliegue
-    @app.route("/")
-    def root():
-        return "¡Hi from Azure Web App with Docker and Flask!"
-
     return app
-
 app = create_app()
 
 if __name__ == "__main__":

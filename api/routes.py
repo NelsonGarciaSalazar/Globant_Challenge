@@ -1,10 +1,27 @@
 from core.services import DataIngestionService
-from flask import Blueprint, jsonify
 from sqlalchemy import text
 from infra.db.connection import SessionLocal
+from flask import Blueprint, request, jsonify
+from core.tasks import load_employees_task
+import redis
+from celery.result import AsyncResult
+from celery_worker import celery_app
 
 router = Blueprint("routes", __name__)
 service = DataIngestionService()
+
+@router.route("/")
+def root():
+    return "¡Hi from Azure Web App Flask in Docker!"
+
+@router.route("/health")
+def health():
+    try:
+        r = redis.Redis(host="redis", port=6379, socket_connect_timeout=2)
+        r.ping()
+        return {"status": "ok", "redis": "connected"}, 200
+    except redis.ConnectionError:
+        return {"status": "error", "redis": "unreachable"}, 500
 
 @router.route("/upload-files", methods=["POST"])
 def upload_files():
@@ -39,23 +56,27 @@ def upload_files():
     })
 
 @router.route("/upload-hired-employees", methods=["POST"])
-def upload_hired_employees():
-    results = []
-    start = 0
-    limit = 1000
+def upload_employees():
+    start = int(request.args.get("start", 0))
+    limit = int(request.args.get("limit", 1000))
+    task = load_employees_task.delay(start=start, limit=limit)
+    return jsonify({"task_id": task.id, "status": "accepted"}), 202
 
-    while True:
-        try:
-            summary = service.load_employees(start=start, limit=limit, skip_existing=True)
-            results.append(summary)
-            if summary["processed"] < limit:
-                break
-            start += limit
-        except Exception as e:
-            results.append({"error": str(e)})
-            break
-
-    return jsonify(results), 200
+@router.route("/task-list")
+def task_list():
+    r = redis.Redis(host="redis", port=6379, decode_responses=True)
+    task_keys = sorted(r.keys("celery-task-meta-*"), reverse=True)[:20]
+    tasks = []
+    for key in task_keys:
+        task_id = key.replace("celery-task-meta-", "")
+        result = AsyncResult(task_id, app=celery_app)
+        if result.status in ("SUCCESS", "FAILURE"):
+            tasks.append({
+                "id": task_id,
+                "status": result.status,
+                "result": result.result if result.ready() else None
+            })
+    return jsonify(tasks)
 
 @router.route("/departments", methods=["POST"])
 def insert_departments():

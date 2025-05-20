@@ -1,6 +1,6 @@
 # Globant Data Engineering Challenge
 
-This project implements a robust data ingestion and reporting API using **Flask**, **Azure SQL**, and **Azure Blob Storage**, following **Hexagonal Architecture (Ports & Adapters)**. The architecture ensures a clear separation of concerns between core business logic, infrastructure, and delivery mechanisms, allowing high testability and scalability.
+This project implements a robust data ingestion and reporting API using **Flask**, **Celery**, **Redis**, **Azure SQL**, and **Azure Blob Storage**, following **Hexagonal Architecture (Ports & Adapters)**. The architecture ensures a clear separation of concerns between core business logic, infrastructure, and delivery mechanisms, allowing high testability and scalability.
 
 ## 🧱 Hexagonal Architecture Overview
 
@@ -8,21 +8,56 @@ The application is structured around three main layers:
 
 - **Domain Layer**: Contains core entities (`Department`, `Job`, `Employee`) with no external dependencies.
 - **Application/Core Layer**: Implements use cases or services (`DataIngestionService`) operating over domain models.
-- **Infrastructure Layer**: Provides the actual implementations of ports—such as SQL databases and Azure Blob access.
+- **Infrastructure Layer**: Provides the actual implementations of ports—such as SQL databases, Azure Blob access, Celery and Redis.
 - **API Layer**: Exposes endpoints via Flask and delegates to core services.
 
 This decoupling allows you to easily mock components (e.g., Blob storage, DB) for testing or replace adapters (e.g., migrate from Azure SQL to PostgreSQL).
 
-![img_1.png](img_1.png)
+                                       [ Cliente / Frontend / Postman ]
+                                                    │
+                                                    ▼
+                                        ┌──────────────────────────┐
+                                        │   API / Entrada HTTP     │
+                                        │  (Flask routes.py)       │
+                                        └──────────────────────────┘
+                                                    │
+                                       (Usa servicios / Casos de uso)
+                                                    │
+                                                    ▼
+                                       ┌──────────────────────────┐
+                                       │     Core / Servicios     │
+                                       │  (services.py:           │
+                                       │   load_departments, etc) │
+                                       └──────────────────────────┘
+                    ┌────────────────────┬────────────┬────────────────────┐
+                    ▼                    ▼            ▼                    ▼
+        ┌────────────────┐     ┌────────────────┐     ┌────────────┐     ┌────────────────────┐
+        │ Adaptador Blob │     │ Adaptador DB   │     │ Modelos     │     │ Celery Task Worker │
+        │ (azure_blob.py)│     │ (SQLAlchemy)   │     │ (ORM models)│     │ (tasks.py)         │
+        └────────────────┘     └────────────────┘     └────────────┘     └────────────────────┘
+                    │                    │                    │                    │
+                    │   (infraestructura)│                    │                    │
+                    ▼                    ▼                    ▼                    ▼
+          [ Azure Blob Storage ]   [ Base de datos SQL ]    [ Tablas ORM ]    [ Redis + Celery ]
 
+---
+## 🔄 Current FLow /upload-hired-employees
+1. POST /upload-hired-employees from Postman
+2. Call to load_employees_task.delay(...)
+3. Celery queue the task, Redis to storage
+4. Worker execute load_employees → use services and adapters
+5. Read data from Azure Blob → validated and load to SQL DB
+6. Storage result to Redis 
+7. Frontend consultant /task-list or /task-status/<id>
 ---
 
 ## 📁 Project Structure
 
 ```bash
 .
-├── Dockerfile                           # Docker container setup
-├── Documentation                        # Requirements, sample requests, and raw data
+├── Dockerfile                        # Docker container setup
+├── Documentation                     # Requirements, sample requests, and raw data
+|-- docker-compose.yml                # Deploy the services of Redis and Celery
 │├── Create Tables.sql                # SQL script to create DB schema
 │├── Globant’s Data Engineering Coding Challenge.pdf  # Original challenge
 │├── Globant Challenge.postman_collection.json # HTTP request samples
@@ -35,6 +70,7 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 ├── config.py                            # Environment variable configuration
 ├── core/
 │└── services.py                      # Business logic layer (use cases)
+||__tasks.py                          # Performance the tasks that Celery sends
 ├── domain/
 │├── department.py                    # Domain model: Department
 │├── employee.py                      # Domain model: Employee
@@ -44,7 +80,9 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 ││├── connection.py                # SQLAlchemy connection manager
 ││└── models.py                    # ORM models mapped to DB tables
 │└── storage/
-│    └── azure_blob.py                # Adapter for Azure Blob Storage
+│|    └── azure_blob.py                # Adapter for Azure Blob Storage
+||___broker
+|     |__ celery_config.py          # Create and queue tasks for processing
 ├── main.py                              # App entrypoint
 ├── requirements.txt                     # Python dependencies
 ├── tests/
@@ -56,7 +94,7 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 │└── test_services_success.py        # Tests for services with valid data
 | .coverange                         # Tools to validate coverage test
 | .env                               # Credentials to connect Azure Blob Storage Container and SQL Server
-|  .gitignore                        # Ignore files to git repository 
+| .gitignore                        # Ignore files to git repository 
 ```
 
 ---
@@ -65,47 +103,69 @@ This decoupling allows you to easily mock components (e.g., Blob storage, DB) fo
 
 ### Endpoints
 
-| Method | Endpoint                    | Description                                |
-|--------|-----------------------------|--------------------------------------------|
-| POST   | `/upload-files`             | Load all CSVs from Azure Blob (batch-wise) |
-| POST   | `/upload-hired-employees`  | Load `hired_employees.csv` in 1000-row batches |
-| POST   | `/departments`             | Load all departments from CSV              |
-| POST   | `/jobs`                    | Load all jobs from CSV                     |
-| GET    | `/report/hired-by-quarter` | Report hires per department/job per quarter |
-| GET    | `/report/hiring-above-average` | Departments hiring above average in 2021 |
-
+| Method | Endpoint                       | Description                                    |
+|--------|--------------------------------|------------------------------------------------|
+| POST   | `/upload-files`                | Load all CSVs from Azure Blob (batch-wise)     |
+| POST   | `/upload-hired-employees`      | Load `hired_employees.csv` in 1000-row batches |
+| POST   | `/departments`                 | Load all departments from CSV                  |
+| POST   | `/jobs`                        | Load all jobs from CSV                         |
+| GET    | `/report/hired-by-quarter`     | Report hires per department/job per quarter    |
+| GET    | `/report/hiring-above-average` | Departments hiring above average in 2021       |
+| GET    | `/task-list`                   | Response of the process load                   |
 
 ### Response format
 All responses are in English and return detailed summaries:
 
 ```json
 {
-  "departments": {
-    "processed": 12,
-    "inserted": 12,
-    "already_exists": 0
-  },
-  "jobs": {
-    "processed": 183,
-    "inserted": 183,
-    "already_exists": 0
-  },
-  "hired_employees": [
-    {
-      "processed": 1000,
-      "inserted": 967,
-      "errors": 33,
-      "already_exists": 0,
-      "error_ids": [5, 9, 12, ...]
+    "departments": {
+        "already_exists": 0,
+        "inserted": 12,
+        "processed": 12
     },
-    {
-      "processed": 999,
-      "inserted": 962,
-      "errors": 37,
-      "already_exists": 0,
-      "error_ids": [1001, 1002, ...]
-    }
-  ]
+    "hired_employees": [
+        {
+            "already_exists": 0,
+            "error_ids": [
+                2,
+                67,
+                84,
+                87,
+                97,
+                133,
+                157,
+                162,
+                198,
+                207,
+                216,
+                340,
+                350,
+                393,
+                533,
+                571,
+                623,
+                663,
+                685,
+                758,
+                766,
+                773,
+                789,
+                792,
+                824,
+                831,
+                832,
+                932,
+                937,
+                942,
+                955,
+                961,
+                970
+            ],
+            "errors": 33,
+            "inserted": 967,
+            "processed": 1000
+        }
+    ]
 }
 ```
 
@@ -157,19 +217,38 @@ python -m coverage report -m
 ```
 Name                                 Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------
-api/routes.py                           79     22    72%   lines: 20-21, 31-33, 54-56, 62-66, 70-74, 100-101, 138-139
-core/services.py                       107     29    73%   lines: 23, 36-37, 44-47, 62-63, 70-73, 83, 99-101, 105-106, 109-111, 122-124, 135-138
-TOTAL                                  448     58    87%
+api/__init__.py                          0      0   100%
+api/routes.py                           95     35    63%   15, 19-24, 37-38, 48-50, 67-79, 83-87, 91-95, 121-122, 159-160
+celery_worker.py                         2      0   100%
+config.py                                6      0   100%
+core/__init__.py                         0      0   100%
+core/services.py                       123     26    79%   29, 42-43, 50-53, 66-67, 74-77, 82, 86, 89, 107-110, 118, 139-140, 142, 147-148
+core/tasks.py                            6      2    67%   6-7
+infra/__init__.py                        0      0   100%
+infra/broker/__init__.py                 0      0   100%
+infra/broker/celery_config.py            3      0   100%
+infra/db/__init__.py                     0      0   100%
+infra/db/connection.py                   5      0   100%
+infra/db/models.py                      22      0   100%
+infra/storage/__init__.py                0      0   100%
+infra/storage/azure_blob.py             15      6    60%   11-12, 15-17, 20
+main.py                                 11      1    91%   14
+tests/__init__.py                        0      0   100%
+tests/conftest.py                       25      0   100%
+tests/test_hired_by_quarter.py          19      0   100%
+tests/test_hiring_above_average.py      19      0   100%
+tests/test_routes.py                    90      0   100%
+tests/test_services_success.py          55      0   100%
+------------------------------------------------------------------
+TOTAL                                  496     70    86%
 ```
 
 All tests passing:
 ```
-collected 11 items
-
-tests/test_hired_by_quarter.py .
-tests/test_hiring_above_average.py .
-tests/test_routes.py ......
-tests/test_services_success.py ...
+tests/test_hired_by_quarter.py .                                                                                                                                     [  9%]
+tests/test_hiring_above_average.py .                                                                                                                                 [ 18%]
+tests/test_routes.py ......                                                                                                                                          [ 72%]
+tests/test_services_success.py ...   
 
 11 passed in 0.13s
 ```
@@ -178,35 +257,55 @@ tests/test_services_success.py ...
 
 ## 🐳 Docker Support
 
-You can either build the image locally for development, or pull the latest pre-built image from Docker Hub.
+This project uses a multi-container setup with:
+. Flask API (web)
+. Celery worker (worker)
+. Redis broker and backend (redis)
+
+You can run the full stack locally using Docker Compose, or build/push a single image for Azure Web App for Containers.
 
 ---
+### 🔁 Option 1: Run locally with Docker Compose (recommended for development)
 
-### 🔨 Option 1: Build the Docker image locally (recommended for development)
+#### Start the containers (Flask, Redis, Celery)
+docker-compose up --build
 
-```bash
-# Build the image targeting linux/amd64 (required for Azure compatibility)
+Access the app locally at: http://localhost:80
+
+#### To stop and Clean:
+docker-compose down --remove-orphans
+
+### 🔨 Option 2: Build the image for Azure (single container deployment)
+
+#### Build and tag the image for AMD64 (required by Azure App Service):
 docker buildx build --platform linux/amd64 -t nelsongarciasalazar/globant_challenge:latest --load .
 
-# Run the container locally with environment variables from .env file
+#### Then run it locally
 docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
 
-### OPTION 2
+#### Or push it to Docker Hub for deployment
+docker push nelsongarciasalazar/globant_challenge:latest
 
-# Pull the latest image from Docker Hub
-docker pull nelsongarciasalazar/globant_challenge:latest
+### 📦 Environment Variables
+Both approaches rely on a .env file for:
+. Azure Blob Storage connection string
+. Database connection string
+. Any other secrets required by the app
 
-# Run the container using environment variables from your .env file
-docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
+Make sure your .env file is present and properly configured.
+
 ```
 
 ---
 
 ## 🧰 Postman
 
-A Postman collection is available in the `Documentation` folder: `Globant Challenge.postman_collection.json`
+A Postman collection is available in the `Documentation` folder: 
+`Globant Challenge.postman_collection.json`
+`Globant Challenge Azure.postman_collection.json`
 
 ---
 
 ## 📬 Contact
-For any questions or feedback, please contact the repository author. nelsong.salazar@gmail.com
+For any questions or feedback, please contact the repository author: 
+nelsong.salazar@gmail.com

@@ -13,14 +13,24 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/upload-files",
+					"raw": "http://localhost:80/upload-files?start=0&limit=1000",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"upload-files"
+					],
+					"query": [
+						{
+							"key": "start",
+							"value": "0"
+						},
+						{
+							"key": "limit",
+							"value": "1000"
+						}
 					]
 				}
 			},
@@ -38,12 +48,12 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/jobs",
+					"raw": "http://localhost:80/jobs",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"jobs"
 					]
@@ -60,12 +70,12 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/departments",
+					"raw": "http://localhost:80/departments",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"departments"
 					]
@@ -82,14 +92,24 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/upload-hired-employees",
+					"raw": "http://localhost:80/upload-hired-employees?start=1000&limit=1000",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"upload-hired-employees"
+					],
+					"query": [
+						{
+							"key": "start",
+							"value": "1000"
+						},
+						{
+							"key": "limit",
+							"value": "1000"
+						}
 					]
 				}
 			},
@@ -104,12 +124,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/report/hired-by-quarter",
+					"raw": "http://localhost:80/report/hired-by-quarter",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"report",
 						"hired-by-quarter"
@@ -127,15 +147,72 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5001/report/hiring-above-average",
+					"raw": "http://localhost:80/report/hiring-above-average",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5001",
+					"port": "80",
 					"path": [
 						"report",
 						"hiring-above-average"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deployment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health - Redis",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Response Process",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/task-list",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"task-list"
 					]
 				}
 			},

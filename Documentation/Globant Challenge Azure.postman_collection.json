@@ -13,7 +13,7 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "https://globantchallenge.azurewebsites.net/upload-files",
+					"raw": "https://globantchallenge.azurewebsites.net/upload-files?start=0&limit=1000",
 					"protocol": "https",
 					"host": [
 						"globantchallenge",
@@ -22,6 +22,16 @@
 					],
 					"path": [
 						"upload-files"
+					],
+					"query": [
+						{
+							"key": "start",
+							"value": "0"
+						},
+						{
+							"key": "limit",
+							"value": "1000"
+						}
 					]
 				}
 			},
@@ -85,7 +95,7 @@
 				"method": "POST",
 				"header": [],
 				"url": {
-					"raw": "https://globantchallenge.azurewebsites.net/upload-hired-employees",
+					"raw": "https://globantchallenge.azurewebsites.net/upload-hired-employees?start=1000&limit=1000",
 					"protocol": "https",
 					"host": [
 						"globantchallenge",
@@ -94,6 +104,16 @@
 					],
 					"path": [
 						"upload-hired-employees"
+					],
+					"query": [
+						{
+							"key": "start",
+							"value": "1000"
+						},
+						{
+							"key": "limit",
+							"value": "1000"
+						}
 					]
 				}
 			},
@@ -142,6 +162,63 @@
 					"path": [
 						"report",
 						"hiring-above-average"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deployment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://globantchallenge.azurewebsites.net",
+					"protocol": "https",
+					"host": [
+						"globantchallenge",
+						"azurewebsites",
+						"net"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health - Redis",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://globantchallenge.azurewebsites.net/health",
+					"protocol": "https",
+					"host": [
+						"globantchallenge",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Response Process",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://globantchallenge.azurewebsites.net/task-list",
+					"protocol": "https",
+					"host": [
+						"globantchallenge",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"task-list"
 					]
 				}
 			},

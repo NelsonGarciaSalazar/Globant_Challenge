@@ -275,7 +275,14 @@ Access the app locally at: http://localhost:80
 #### To stop and Clean:
 docker-compose down --remove-orphans
 
-### 🔨 Option 2: Build the image for Azure (single container deployment)
+
+### Option 2: Delete and build again
+
+docker-compose down --remove-orphans
+
+docker-compose up --build
+
+### 🔨 Option 3: Build the image for Azure (single container deployment)
 
 #### Build and tag the image for AMD64 (required by Azure App Service):
 docker buildx build --platform linux/amd64 -t nelsongarciasalazar/globant_challenge:latest --load .
@@ -285,6 +292,7 @@ docker run --env-file .env -p 80:80 nelsongarciasalazar/globant_challenge:latest
 
 #### Or push it to Docker Hub for deployment
 docker push nelsongarciasalazar/globant_challenge:latest
+
 
 ### 📦 Environment Variables
 Both approaches rely on a .env file for:

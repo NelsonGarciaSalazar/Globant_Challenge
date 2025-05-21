@@ -1,9 +1,10 @@
+import os
+import redis
 from core.services import DataIngestionService
 from sqlalchemy import text
 from infra.db.connection import SessionLocal
 from flask import Blueprint, request, jsonify
 from core.tasks import load_employees_task
-import redis
 from celery.result import AsyncResult
 from celery_worker import celery_app
 
@@ -14,10 +15,21 @@ service = DataIngestionService()
 def root():
     return "¡Hi from Azure Web App Flask in Docker!"
 
+import os
+import redis
+from urllib.parse import urlparse
+
 @router.route("/health")
 def health():
+    redis_url = os.getenv("CELERY_BROKER_URL", "redis://redis:6379")
+    parsed_url = urlparse(redis_url)
+
     try:
-        r = redis.Redis(host="redis", port=6379, socket_connect_timeout=2)
+        r = redis.Redis(
+            host=parsed_url.hostname,
+            port=parsed_url.port or 6379,
+            socket_connect_timeout=2
+        )
         r.ping()
         return {"status": "ok", "redis": "connected"}, 200
     except redis.ConnectionError:
@@ -64,7 +76,9 @@ def upload_employees():
 
 @router.route("/task-list")
 def task_list():
-    r = redis.Redis(host="redis", port=6379, decode_responses=True)
+    redis_url = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+    r = redis.from_url(redis_url, decode_responses=True)
+
     task_keys = sorted(r.keys("celery-task-meta-*"), reverse=True)[:20]
     tasks = []
     for key in task_keys:
